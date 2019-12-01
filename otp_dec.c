@@ -94,12 +94,15 @@ int main(int argc, char *argv[])
 
 	// Get return message from server
 	memset(buffer, '\0', sizeof(buffer)); // Clear out the buffer again for reuse
-	char completeMessage[80000];
-	memset(completeMessage,'\0',80000);
+	char completeMessage[160000];
+	memset(completeMessage,'\0',160000);
 	while(1)
 	{
+	
+	//memset(buffer,'\0',160000);
 		charsRead = recv(socketFD, buffer,80000 , 0); // Read data from the socket, leaving \0 at end
 		//	strcpy(completeMessage+strlen(completeMessage),buffer);
+		printf("%s\n",buffer);
 		strcat(completeMessage,buffer);
 		if(completeMessage[strlen(completeMessage)-1] == '*')
 		{
