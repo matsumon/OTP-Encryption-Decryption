@@ -53,17 +53,31 @@ int main(int argc, char *argv[])
 			if (establishedConnectionFD < 0) error("ERROR on accept");
 
 			// Get the message from the client and display it
+			char message [160000];
+			memset(message,'\0',160000);
 			memset(buffer, '\0',160000);
-			charsRead = recv(establishedConnectionFD, buffer,160000, 0); // Read the client's message from the socket
-			if (charsRead < 0) error("ERROR reading from socket");
-			//printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+			int check = 0;
+			while(1)
+			{
+				charsRead = recv(establishedConnectionFD, message,160000,0 ); // Read the client's message from the socket
+				strcpy(buffer+strlen(buffer), message);
+				memset(message,'\0',160000);
+				if (charsRead < 0) error("ERROR reading from socket");
+				//printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+				if(buffer[strlen(buffer)-1]=='*')
+				{
+					//printf("chars read %d\n",strlen(buffer));
+					buffer[strlen(buffer)-1]='\0';
+					break;
+				}		
+			}
 			if(buffer[0] != '1')
 			{
 				fprintf(stderr,"otp_enc_c can only comm with otp_enc\n");
 				close(establishedConnectionFD); // Close the existing socket which is connected to the client
 				return(1);
 			}
-			char * encrypt;
+			char encrypt[80000];
 			char text[strlen(buffer)];
 			memset(text,'\0',strlen(buffer));
 			strcpy(text,buffer+1);
@@ -74,8 +88,7 @@ int main(int argc, char *argv[])
 			text[half-1]='\0';
 			key[strlen(key)-1]='\0';
 			//printf("text %s \n key %s \n",text,key);
-			encrypt = (char*) malloc(sizeof(char)*strlen(text));	
-			memset(encrypt,'\0',strlen(text));
+			memset(encrypt,'\0',80000);
 			char a [1];
 			int d;
 			for(d = 0; d < strlen(text); d++)
@@ -96,23 +109,24 @@ int main(int argc, char *argv[])
 					i=' ';
 				}
 				sprintf(a,"%c",i);
-				if(a[0]<'A' && a[0] != ' ')
+			/*	if(a[0]<'A' && a[0] != ' ')
 				{
 					printf("fucked up A %c %c \n", text[d],key[d]);
 				}
 				if(a[0]>'Z')
 				{
 					printf("fucked up Z %c %c \n", text[d],key[d]);
-				}
+				}*/
 				encrypt[d]=a[0];
 			}
+			encrypt[strlen(encrypt)]='*';
 			// Send a Success message back to the client
 			charsRead = send(establishedConnectionFD, encrypt,strlen(encrypt), 0); // Send success back
 			if (charsRead < 0) error("ERROR writing to socket");
-	close(establishedConnectionFD); // Close the existing socket which is connected to the client
+			close(establishedConnectionFD); // Close the existing socket which is connected to the client
 		}
-	close(establishedConnectionFD); // Close the existing socket which is connected to the client
+		close(establishedConnectionFD); // Close the existing socket which is connected to the client
 	}
-//	close(listenSocketFD); // Close the listening socket
-//	return 0; 
+	//	close(listenSocketFD); // Close the listening socket
+	//	return 0; 
 }

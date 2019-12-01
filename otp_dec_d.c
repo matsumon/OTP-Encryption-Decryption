@@ -54,14 +54,25 @@ int main(int argc, char *argv[])
 
 			// Get the message from the client and display it
 			memset(buffer, '\0', 160000);
-			charsRead = recv(establishedConnectionFD, buffer,160000 , 0); // Read the client's message from the socket
-			if (charsRead < 0) error("ERROR reading from socket");
-		//	printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+			char message [160000];
+			memset(message, '\0', 160000);
+			char decrypted[80000];
+			while(1)
+			{
+				charsRead = recv(establishedConnectionFD, message,160000 , 0); // Read the client's message from the socket
+				strcpy(buffer+strlen(buffer),message);
+				if(buffer[strlen(buffer)-1]=='*')
+				{
+					break;
+				}
+				if (charsRead < 0) error("ERROR reading from socket");
+				//printf("SERVER: I received this from the client: \"%s\"\n", buffer);
+			}
 			if(buffer[0] != '2')
 			{
 				fprintf(stderr,"Only Accepts Connections from otp_dec\n");
 				close(establishedConnectionFD); // Close the existing socket which is connected to the client
-				exit(1);
+				return(1);
 			}
 			char text[strlen(buffer)];
 			memset(text,'\0',strlen(buffer));
@@ -71,13 +82,12 @@ int main(int argc, char *argv[])
 			memset(key,'\0',strlen(buffer));
 			strcpy(key,text+half);
 			text[half-1]='\0';
+			//printf("text %s",text);
 			key[strlen(key)-1]='\0';
-
+			//	printf("%d %d\n",strlen(text),strlen(key));
 			int end = strlen(key);
 			int i;
-			char * decrypted;
-			decrypted = (char *) malloc(sizeof(char)*strlen(key));
-			memset(decrypted,'\0',strlen(key));
+			memset(decrypted,'\0',80000);
 			char a[1];
 			for(i = 0; i <= end; i++)
 			{
@@ -108,13 +118,14 @@ int main(int argc, char *argv[])
 				}
 				decrypted[i]=a[0];
 			}
+			decrypted[strlen(decrypted)]='*';
 			// Send a Success message back to the client
 			charsRead = send(establishedConnectionFD, decrypted,strlen(decrypted), 0); // Send success back
 			if (charsRead < 0) error("ERROR writing to socket");
-	close(establishedConnectionFD); // Close the existing socket which is connected to the client
+			close(establishedConnectionFD); // Close the existing socket which is connected to the client
 		}
-	close(establishedConnectionFD); // Close the existing socket which is connected to the client
+		close(establishedConnectionFD); // Close the existing socket which is connected to the client
 	}
 	//	close(listenSocketFD); // Close the listening socket
-//	return 0; 
+	//	return 0; 
 }

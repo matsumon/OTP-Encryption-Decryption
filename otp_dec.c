@@ -79,12 +79,14 @@ int main(int argc, char *argv[])
 	// Connect to server
 	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to address
 		error("CLIENT: ERROR connecting");
-	char buffer[80000];
-	memset(buffer,'\0',80000);
+	char buffer[160000];
+	memset(buffer,'\0',160000);
 	buffer[0] ='2';
 	strcpy(buffer+1,givenText);
 	strcpy(buffer+1+strlen(givenText),givenKey);
-	//printf("buffer: %s\n " , buffer);
+	buffer[strlen(buffer)-1]='*';
+//printf("buffer: %s\n " , buffer);
+//printf("buffer: %d\n\n " , strlen(buffer));
 	// Send message to server
 	charsWritten = send(socketFD, buffer, strlen(buffer), 0); // Write to the server
 	if (charsWritten < 0) error("CLIENT: ERROR writing to socket");
@@ -94,11 +96,19 @@ int main(int argc, char *argv[])
 	memset(buffer, '\0', sizeof(buffer)); // Clear out the buffer again for reuse
 	char completeMessage[80000];
 	memset(completeMessage,'\0',80000);
-	charsRead = recv(socketFD, buffer,strlen(givenKey)-1 , 0); // Read data from the socket, leaving \0 at end
-	strcat(completeMessage,buffer);
-	if (charsRead < 0) error("CLIENT: ERROR reading from socket");
+	while(1)
+	{
+		charsRead = recv(socketFD, buffer,80000 , 0); // Read data from the socket, leaving \0 at end
+		//	strcpy(completeMessage+strlen(completeMessage),buffer);
+		strcat(completeMessage,buffer);
+		if(completeMessage[strlen(completeMessage)-1] == '*')
+		{
+			completeMessage[strlen(completeMessage)-1]='\0';
+			break;
+		}
+		if (charsRead < 0) error("CLIENT: ERROR reading from socket");
+	}
 	printf("%s\n", completeMessage);
-	strcat(completeMessage,buffer);
 	close(socketFD); // Close the socket
 	return 0;
 }
