@@ -62,6 +62,14 @@ int main(int argc, char *argv[])
 				charsRead = recv(establishedConnectionFD, message,160000,0 ); // Read the client's message from the socket
 				strcpy(buffer+strlen(buffer), message);
 				memset(message,'\0',160000);
+				if(buffer[0] != '1')
+				{
+					char bad[]="!*\0";
+					charsRead = send(establishedConnectionFD, bad,strlen(bad), 0); // Send success back
+					close(establishedConnectionFD); // Close the existing socket which is connected to the client
+					return(1);
+				}
+
 				if (charsRead < 0) error("ERROR reading from socket");
 				//printf("SERVER: I received this from the client: \"%s\"\n", buffer);
 				if(buffer[strlen(buffer)-1]=='*')
@@ -69,13 +77,8 @@ int main(int argc, char *argv[])
 					//printf("chars read %d\n",strlen(buffer));
 					buffer[strlen(buffer)-1]='\0';
 					break;
-				}		
-			}
-			if(buffer[0] != '1')
-			{
-				fprintf(stderr,"otp_enc_c can only comm with otp_enc\n");
-				close(establishedConnectionFD); // Close the existing socket which is connected to the client
-				return(1);
+				}
+
 			}
 			char encrypt[80000];
 			char text[strlen(buffer)];
@@ -109,14 +112,14 @@ int main(int argc, char *argv[])
 					i=' ';
 				}
 				sprintf(a,"%c",i);
-			/*	if(a[0]<'A' && a[0] != ' ')
-				{
+				/*	if(a[0]<'A' && a[0] != ' ')
+					{
 					printf("fucked up A %c %c \n", text[d],key[d]);
-				}
-				if(a[0]>'Z')
-				{
+					}
+					if(a[0]>'Z')
+					{
 					printf("fucked up Z %c %c \n", text[d],key[d]);
-				}*/
+					}*/
 				encrypt[d]=a[0];
 			}
 			encrypt[strlen(encrypt)]='*';
@@ -124,6 +127,7 @@ int main(int argc, char *argv[])
 			charsRead = send(establishedConnectionFD, encrypt,strlen(encrypt), 0); // Send success back
 			if (charsRead < 0) error("ERROR writing to socket");
 			close(establishedConnectionFD); // Close the existing socket which is connected to the client
+			exit(0);
 		}
 		close(establishedConnectionFD); // Close the existing socket which is connected to the client
 	}

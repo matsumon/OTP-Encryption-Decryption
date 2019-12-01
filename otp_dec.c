@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	getline(&givenKey,&size,key);
 	fclose(text);
 	fclose(key);
-	if(strlen(givenText) >= strlen(givenKey))
+	if(strlen(givenText) > strlen(givenKey))
 	{
 		fprintf(stderr,"Key Size is Smaller than Text size\n");
 		exit(1);
@@ -100,10 +100,17 @@ int main(int argc, char *argv[])
 	{
 	
 	//memset(buffer,'\0',160000);
-		charsRead = recv(socketFD, buffer,80000 , 0); // Read data from the socket, leaving \0 at end
+		charsRead = recv(socketFD, buffer,80000, 0); // Read data from the socket, leaving \0 at end
 		//	strcpy(completeMessage+strlen(completeMessage),buffer);
-		printf("%s\n",buffer);
+	//	printf("%s\n",buffer);
 		strcat(completeMessage,buffer);
+		if(completeMessage[0]=='!')
+		{
+			fprintf(stderr,"Cannot Connect To Encrypting Server\n");
+			close(socketFD); // Close the socket
+			exit(1);
+		}
+
 		if(completeMessage[strlen(completeMessage)-1] == '*')
 		{
 			completeMessage[strlen(completeMessage)-1]='\0';

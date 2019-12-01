@@ -56,9 +56,11 @@ int main(int argc, char *argv[])
 			memset(buffer, '\0', 160000);
 			char message [160000];
 			memset(message, '\0', 160000);
-			char decrypted[80000];
+			char decrypted[160000];
 			while(1)
 			{
+			
+			memset(message, '\0', 160000);
 				charsRead = recv(establishedConnectionFD, message,160000 , 0); // Read the client's message from the socket
 				strcpy(buffer+strlen(buffer),message);
 				if(buffer[strlen(buffer)-1]=='*')
@@ -70,7 +72,8 @@ int main(int argc, char *argv[])
 			}
 			if(buffer[0] != '2')
 			{
-				fprintf(stderr,"Only Accepts Connections from otp_dec\n");
+					char bad[]="!*\0";
+					charsRead = send(establishedConnectionFD, bad,strlen(bad), 0); // Send success back
 				close(establishedConnectionFD); // Close the existing socket which is connected to the client
 				return(1);
 			}
@@ -87,7 +90,7 @@ int main(int argc, char *argv[])
 			//	printf("%d %d\n",strlen(text),strlen(key));
 			int end = strlen(key);
 			int i;
-			memset(decrypted,'\0',80000);
+			memset(decrypted,'\0',160000);
 			char a[1];
 			for(i = 0; i <= end; i++)
 			{
@@ -120,10 +123,11 @@ int main(int argc, char *argv[])
 			}
 			decrypted[strlen(decrypted)]='*';
 			// Send a Success message back to the client
-			printf("decrypted %s",decrypted);
+			//printf("decrypted %s",decrypted);
 			charsRead = send(establishedConnectionFD, decrypted,80001, 0); // Send success back
 			if (charsRead < 0) error("ERROR writing to socket");
 			close(establishedConnectionFD); // Close the existing socket which is connected to the client
+			exit(0);
 		}
 		close(establishedConnectionFD); // Close the existing socket which is connected to the client
 	}
